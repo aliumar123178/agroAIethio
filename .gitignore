@@ -5,3 +5,4 @@ __pycache__/
 *.h5
 *.keras
 .DS_Store
+plant_full_model.h5

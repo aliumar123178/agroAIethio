@@ -1,22 +1,15 @@
 import streamlit as st
 import numpy as np
 from PIL import Image
-import random
+import tensorflow as tf
 
-st.set_page_config(page_title="AgroAI Ethio - Real Tomato AI", layout="centered")
+st.set_page_config(page_title="AgroAI Ethio", layout="centered")
 
 st.title("🍅 AgroAI Ethio - Real Tomato Leaf Disease Detection")
-
 st.write("Upload a tomato leaf image for AI diagnosis")
 
-# REAL pretrained model (Keras Applications backbone)
-def fake_predict():
-    index = random.randint(0, len(labels)-1)
-    confidence = random.uniform(0.70, 0.99)
-    return index, confidence
-
-# IMPORTANT: In real deployment you replace this with trained weights
-# model.load_weights("tomato_model_weights.h5")
+# ✅ LOAD REAL MODEL
+model = tf.keras.models.load_model("plant_full_model.h5")
 
 labels = [
     "Bacterial Spot",
@@ -31,10 +24,11 @@ labels = [
     "Healthy"
 ]
 
+# ✅ PREPROCESS IMAGE
 def preprocess(img):
-    img = img.resize((224,224))
+    img = img.resize((224, 224))
     img = np.array(img)
-    img = tf.keras.applications.mobilenet_v2.preprocess_input(img)
+    img = img / 255.0
     img = np.expand_dims(img, axis=0)
     return img
 
@@ -44,15 +38,20 @@ if file:
     img = Image.open(file)
     st.image(img, caption="Uploaded Leaf")
 
-    index, confidence = fake_predict()
+    # ✅ REAL AI PREDICTION
+    x = preprocess(img)
+    pred = model.predict(x)
+
+    index = np.argmax(pred)
+    confidence = np.max(pred)
 
     st.subheader("🔍 AI Result")
     st.success(f"Disease: {labels[index]}")
-    st.info(f"Confidence: {round(confidence*100,2)}%")
+    st.info(f"Confidence: {round(confidence * 100, 2)}%")
 
     if labels[index] == "Healthy":
         st.success("Plant is healthy 🌿")
     else:
         st.warning("Disease detected ⚠️ Take action immediately")
 
-st.caption("AgroAI Ethio - by Ali umar 2026")
+st.caption("AgroAI Ethio - by Ali Umar 2026")
